@@ -53,7 +53,7 @@
   .seg button{flex:1;border:0;background:transparent;border-radius:8px;padding:9px;font-size:14px;font-weight:700;color:var(--ai)}
   .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 
-  .ev{display:grid;grid-template-columns:50px 1fr 26px;gap:10px;padding:13px 4px;
+  .ev{display:grid;grid-template-columns:48px 1fr 34px;gap:10px;padding:13px 4px;
     border-bottom:1px solid var(--line);align-items:start}
   .ev .t{font-size:13px;font-weight:800;color:var(--ai);font-variant-numeric:tabular-nums;padding-top:1px}
   .ev .ttl{font-size:15.5px;font-weight:700;letter-spacing:-.01em}
@@ -149,14 +149,14 @@
   .noteadd button{flex:0 0 auto;align-self:stretch;border:0;background:var(--ink);color:#fff;border-radius:11px;padding:0 16px;font-weight:800}
   .empty{text-align:center;color:var(--muted);font-size:13.5px;padding:26px 10px}
 
-  #big{position:fixed;inset:0;z-index:60;background:var(--paper);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px 22px}
+  #big{position:fixed;inset:0;z-index:60;background:var(--paper);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:58px 16px 64px;overflow:auto}
   #big.on{display:flex}
   #big::before{content:"";position:absolute;top:0;left:0;right:0;height:7px;background:var(--shu)}
-  #big .label{position:absolute;top:24px;font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--shu)}
-  #big .ja{font-family:var(--mincho);font-size:33px;line-height:1.45;font-weight:600;color:var(--ink);word-break:keep-all;max-width:18ch;white-space:pre-wrap}
-  #big .yomi{font-size:17px;color:var(--ai);font-weight:700;margin-top:18px}
-  #big .ko{font-size:15px;color:var(--muted);margin-top:8px}
-  #big .close{position:absolute;bottom:32px;font-size:13px;color:var(--muted)}
+  #big .label{position:fixed;top:22px;left:0;right:0;font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--shu)}
+  #big .ja{font-family:var(--mincho);font-size:34px;line-height:1.4;font-weight:600;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;width:100%}
+  #big .yomi{font-size:16px;color:var(--ai);font-weight:700;margin-top:16px;overflow-wrap:anywhere}
+  #big .ko{font-size:14px;color:var(--muted);margin-top:7px;overflow-wrap:anywhere}
+  #big .close{position:fixed;bottom:26px;left:0;right:0;font-size:13px;color:var(--muted)}
 
   .modal{position:fixed;inset:0;z-index:55;background:rgba(20,20,30,.55);display:none;align-items:center;justify-content:center;padding:20px}
   .modal.on{display:flex}
@@ -188,6 +188,19 @@
   .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;
     padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:70;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%}
   .toast.on{opacity:1}
+  .ckcol{display:flex;flex-direction:column;align-items:center;gap:7px}
+  .eedit{border:0;background:transparent;color:#b9b1a1;font-size:15px;padding:0;line-height:1}
+  .ev.now .eedit{color:var(--shu)}
+  .addev{width:100%;margin:8px 0 4px;border:1px dashed var(--ai);color:var(--ai);background:var(--ai-tint);border-radius:11px;padding:13px;font-size:13.5px;font-weight:800}
+  .ehidden{font-size:12px;color:var(--muted);text-align:center;margin-top:12px}
+  .ehidden button{border:0;background:transparent;color:var(--ai);font-weight:800;text-decoration:underline}
+  .efield{margin-bottom:13px}
+  .efield label{display:block;font-size:12px;font-weight:800;color:var(--ink-soft);margin-bottom:5px}
+  .efield input,.efield textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:12px;font-size:16px;background:#fff;color:var(--ink)}
+  .efield textarea{resize:vertical;min-height:46px}
+  .erowbtn{display:flex;gap:9px;margin-top:2px}
+  .erowbtn .save{flex:1;border:0;background:var(--ink);color:#fff;border-radius:12px;padding:14px;font-weight:800;font-size:15px}
+  .erowbtn .del{flex:0 0 auto;border:1px solid var(--shu);color:var(--shu);background:#fff;border-radius:12px;padding:14px 16px;font-weight:800}
 </style>
 </head>
 <body>
@@ -214,6 +227,7 @@
 
 <div class="modal" id="roomModal"><div class="sheet" id="roomSheet"></div></div>
 <div class="modal" id="emgModal"><div class="sheet" id="emgSheet"></div></div>
+<div class="modal" id="editModal"><div class="sheet" id="editSheet"></div></div>
 
 <nav id="nav"></nav>
 <div class="toast" id="toast"></div>
@@ -252,7 +266,7 @@ const DAYS=[
    {t:"06:50",ttl:"보안검색 · 출국심사",dt:"액체류 주의, 보조배터리는 휴대"},
    {t:"07:30",ttl:"탑승구 대기",dt:"화장실 미리. 탑승구 변경 확인"},
    {t:"08:20",ttl:"TW213 탑승 → 09:25 후쿠오카",dt:"착륙 후 천천히 이동"},
-   {t:"09:30",ttl:"입국심사 · 수하물 · 세관",dt:"사람들 따라 Arrivals",q:"福岡空港 国際線ターミナル"},
+   {t:"09:30",ttl:"입국심사 · 수하물 · 세관",dt:"사람들 따라 Arrivals",say:9,q:"福岡空港 国際線ターミナル"},
    {t:"10:10",ttl:"1층 도착로비 eSIM 연결",dt:"데이터=로밍도깨비, 한국번호는 전화/문자만"},
    {t:"10:25",ttl:"CARGO PASS 캐리어 배송",dt:"목적지=니시테츠 하카타. 영수증 보관",say:1,q:HOTEL1.q},
    {t:"10:40",ttl:"버스 승강장 확인",dt:"니시테츠 6·7번 / HEARTS 11번",say:2},
@@ -301,6 +315,8 @@ const QUICK=[
  {ja:"荷物を預けられますか？",yomi:"니모츠오 아즈케라레마스카",ko:"짐 맡길 수 있나요?"},
  {ja:"荷物をチェックインまで預かってもらえますか？",yomi:"니모츠오 첵쿠인마데 아즈캇테 모라에마스카",ko:"체크인 전까지 짐 맡길 수 있나요?"},
  {ja:"ありがとうございました。",yomi:"아리가토 고자이마시타",ko:"감사했습니다"},
+ {ja:"観光で来ました。2泊3日です。",yomi:"칸코데 키마시타. 니하쿠 밋카데스",ko:"관광으로 왔습니다. 2박 3일입니다"},
+ {ja:"ここまでお願いします。（画面を見せます）",yomi:"코코마데 오네가이시마스",ko:"여기까지 가 주세요 (화면 보여주기)"},
 ];
 
 const SITS=[
@@ -319,39 +335,113 @@ const PHR={
  "공통":[
   {ko:"실례합니다 / 저기요",ja:"すみません。",yomi:"스미마센"},
   {ko:"감사합니다",ja:"ありがとうございます。",yomi:"아리가토 고자이마스"},
+  {ko:"죄송합니다",ja:"ごめんなさい。",yomi:"고멘나사이"},
+  {ko:"네 / 아니요",ja:"はい。/ いいえ。",yomi:"하이 / 이이에"},
+  {ko:"괜찮습니다",ja:"大丈夫です。",yomi:"다이조부데스"},
+  {ko:"부탁합니다",ja:"お願いします。",yomi:"오네가이시마스"},
   {ko:"한국 사람입니다. 일본어를 잘 못합니다",ja:"韓国人です。日本語があまりできません。",yomi:"캉코쿠진데스. 니혼고가 아마리 데키마센"},
   {ko:"천천히 말해 주세요",ja:"ゆっくり話してください。",yomi:"윳쿠리 하나시테 쿠다사이"},
+  {ko:"다시 한 번 말해 주세요",ja:"もう一度お願いします。",yomi:"모이치도 오네가이시마스"},
   {ko:"적어 주세요",ja:"書いてください。",yomi:"카이테 쿠다사이"},
-  {ko:"지도에서 가리켜 주세요",ja:"地図で指さしてください。",yomi:"치즈데 유비사시테 쿠다사이"}],
+  {ko:"지도에서 가리켜 주세요",ja:"地図で指さしてください。",yomi:"치즈데 유비사시테 쿠다사이"},
+  {ko:"영어 되나요?",ja:"英語は通じますか？",yomi:"에이고와 츠지마스카"}],
+ "도착·입국":[
+  {ko:"관광으로 왔습니다. 2박 3일입니다",ja:"観光で来ました。2泊3日です。",yomi:"칸코데 키마시타. 니하쿠 밋카데스"},
+  {ko:"후쿠오카에 머뭅니다",ja:"福岡に泊まります。",yomi:"후쿠오카니 토마리마스"},
+  {ko:"묵는 호텔은 여기입니다 (화면)",ja:"泊まるホテルはここです。",yomi:"토마루 호테루와 코코데스"},
+  {ko:"돌아가는 항공권 있습니다",ja:"帰りの航空券があります。",yomi:"카에리노 코쿠켄가 아리마스"},
+  {ko:"신고할 물건 없습니다",ja:"申告するものはありません。",yomi:"신코쿠스루 모노와 아리마센"},
+  {ko:"일행입니다",ja:"連れです。",yomi:"츠레데스"},
+  {ko:"짐은 어디서 찾나요?",ja:"荷物はどこで受け取りますか？",yomi:"니모츠와 도코데 우케토리마스카"}],
  "공항·짐":[
   {ko:"이 캐리어를 이 호텔로 보내고 싶습니다",ja:"このスーツケースをこのホテルに送りたいです。",yomi:"코노 스츠케스오 코노 호테루니 오쿠리타이데스"},
   {ko:"오늘 몇 시쯤 도착하나요?",ja:"今日何時ごろ届きますか？",yomi:"쿄 난지고로 토도키마스카"},
   {ko:"영수증을 주세요",ja:"レシートをください。",yomi:"레시토오 쿠다사이"},
-  {ko:"체크인 전까지 짐 맡길 수 있나요?",ja:"荷物をチェックインまで預かってもらえますか？",yomi:"니모츠오 첵쿠인마데 아즈캇테 모라에마스카"}],
- "버스":[
+  {ko:"체크인 전까지 짐 맡길 수 있나요?",ja:"荷物をチェックインまで預かってもらえますか？",yomi:"니모츠오 첵쿠인마데 아즈캇테 모라에마스카"},
+  {ko:"카트는 어디 있나요?",ja:"カートはどこですか？",yomi:"카토와 도코데스카"}],
+ "교통·버스":[
   {ko:"하카타역에 가고 싶습니다",ja:"博多駅に行きたいです。",yomi:"하카타에키니 이키타이데스"},
   {ko:"몇 번 승강장인가요?",ja:"何番のバス停ですか？",yomi:"난반노 바스테데스카"},
   {ko:"이 티켓으로 탈 수 있나요?",ja:"このチケットで乗れますか？",yomi:"코노 치켓토데 노레마스카"},
-  {ko:"하카타역 도착하면 알려주세요",ja:"博多駅に着いたら教えてください。",yomi:"하카타에키니 츠이타라 오시에테 쿠다사이"}],
+  {ko:"도착하면 알려주세요",ja:"着いたら教えてください。",yomi:"츠이타라 오시에테 쿠다사이"},
+  {ko:"요금은 얼마인가요?",ja:"料金はいくらですか？",yomi:"료킨와 이쿠라데스카"},
+  {ko:"현금으로 되나요?",ja:"現金で払えますか？",yomi:"겐킨데 하라에마스카"}],
+ "지하철":[
+  {ko:"나카스카와바타역 어떻게 가나요?",ja:"中洲川端駅へはどう行きますか？",yomi:"나카스카와바타에키에와 도 이키마스카"},
+  {ko:"공항선 맞나요?",ja:"空港線で合っていますか？",yomi:"쿠코센데 앗테이마스카"},
+  {ko:"표는 어디서 사나요?",ja:"切符はどこで買えますか？",yomi:"킵푸와 도코데 카에마스카"},
+  {ko:"텐진에 가나요?",ja:"天神に行きますか？",yomi:"텐진니 이키마스카"},
+  {ko:"몇 정거장인가요?",ja:"いくつ目の駅ですか？",yomi:"이쿠츠메노 에키데스카"}],
+ "택시":[
+  {ko:"여기까지 가 주세요 (화면)",ja:"ここまでお願いします。",yomi:"코코마데 오네가이시마스"},
+  {ko:"얼마나 걸리나요?",ja:"どのくらいかかりますか？",yomi:"도노쿠라이 카카리마스카"},
+  {ko:"카드 되나요?",ja:"カードで払えますか？",yomi:"카도데 하라에마스카"},
+  {ko:"트렁크 열어 주세요",ja:"トランクを開けてください。",yomi:"토랑쿠오 아케테 쿠다사이"},
+  {ko:"여기서 세워 주세요",ja:"ここで止めてください。",yomi:"코코데 토메테 쿠다사이"}],
  "길찾기":[
   {ko:"여기 가고 싶습니다",ja:"ここに行きたいです。",yomi:"코코니 이키타이데스"},
   {ko:"화장실은 어디인가요?",ja:"トイレはどこですか？",yomi:"토이레와 도코데스카"},
-  {ko:"엘리베이터는 어디인가요?",ja:"エレベーターはどこですか？",yomi:"에레베타와 도코데스카"}],
+  {ko:"엘리베이터는 어디인가요?",ja:"エレベーターはどこですか？",yomi:"에레베타와 도코데스카"},
+  {ko:"가장 가까운 역은?",ja:"一番近い駅はどこですか？",yomi:"이치반 치카이 에키와 도코데스카"},
+  {ko:"걸어서 갈 수 있나요?",ja:"歩いて行けますか？",yomi:"아루이테 이케마스카"}],
  "식당":[
   {ko:"두 명입니다. 예약 안 했습니다",ja:"2人です。予約していません。",yomi:"후타리데스. 요야쿠시테 이마센"},
   {ko:"메뉴판 주세요",ja:"メニューをください。",yomi:"메뉴오 쿠다사이"},
   {ko:"추천 메뉴는 뭔가요?",ja:"おすすめは何ですか？",yomi:"오스스메와 난데스카"},
-  {ko:"계산 부탁합니다. 카드 되나요?",ja:"お会計お願いします。カードで払えますか？",yomi:"오카이케 오네가이시마스. 카도데 하라에마스카"}],
+  {ko:"이거 주세요 (가리키며)",ja:"これをください。",yomi:"코레오 쿠다사이"},
+  {ko:"맵지 않게 해 주세요",ja:"辛くしないでください。",yomi:"카라쿠 시나이데 쿠다사이"},
+  {ko:"아이 의자 있나요?",ja:"子ども用の椅子はありますか？",yomi:"코도모요노 이스와 아리마스카"},
+  {ko:"물 주세요",ja:"お水をください。",yomi:"오미즈오 쿠다사이"},
+  {ko:"계산 부탁합니다. 카드 되나요?",ja:"お会計お願いします。カードで払えますか？",yomi:"오카이케 오네가이시마스. 카도데 하라에마스카"},
+  {ko:"잘 먹었습니다",ja:"ごちそうさまでした。",yomi:"고치소사마데시타"}],
+ "카페·편의점":[
+  {ko:"따뜻한 걸로 / 차가운 걸로",ja:"ホットで。/ アイスで。",yomi:"홋토데 / 아이스데"},
+  {ko:"포장이요",ja:"持ち帰りで。",yomi:"모치카에리데"},
+  {ko:"여기서 먹어요",ja:"店内で。",yomi:"텐나이데"},
+  {ko:"봉투 주세요",ja:"袋をください。",yomi:"후쿠로오 쿠다사이"},
+  {ko:"데워 주세요",ja:"温めてください。",yomi:"아타타메테 쿠다사이"},
+  {ko:"젓가락 주세요",ja:"お箸をください。",yomi:"오하시오 쿠다사이"}],
  "쇼핑·굿즈":[
   {ko:"하이큐 니시노야 굿즈 찾고 있어요",ja:"ハイキューの西谷夕のグッズを探しています。",yomi:"하이큐노 니시노야 유노 굿즈오 사가시테이마스"},
   {ko:"피규어나 키링 있나요?",ja:"フィギュアやキーホルダーはありますか？",yomi:"피규아야 키호루다와 아리마스카"},
   {ko:"이거 중고인가요?",ja:"これは中古ですか？",yomi:"코레와 추코데스카"},
   {ko:"부품 전부 있나요?",ja:"パーツは全部ありますか？",yomi:"파츠와 젠부 아리마스카"},
-  {ko:"면세 되나요?",ja:"免税できますか？",yomi:"멘제 데키마스카"}],
+  {ko:"재고 있나요?",ja:"在庫はありますか？",yomi:"자이코와 아리마스카"},
+  {ko:"면세 되나요?",ja:"免税できますか？",yomi:"멘제 데키마스카"},
+  {ko:"선물용으로 포장해 주세요",ja:"プレゼント用に包んでください。",yomi:"프레젠토요니 츠츤데 쿠다사이"}],
  "호텔":[
   {ko:"체크인 부탁합니다. 예약했습니다",ja:"チェックインをお願いします。予約しています。",yomi:"첵쿠인오 오네가이시마스. 요야쿠시테이마스"},
   {ko:"짐 맡길 수 있나요?",ja:"荷物を預けられますか？",yomi:"니모츠오 아즈케라레마스카"},
-  {ko:"택시 불러 주세요",ja:"タクシーを呼んでください。",yomi:"타쿠시오 욘데 쿠다사이"}],
+  {ko:"체크아웃 후에도 짐 보관되나요?",ja:"チェックアウト後も荷物を預かってもらえますか？",yomi:"첵쿠아우토 아토모 니모츠오 아즈캇테 모라에마스카"},
+  {ko:"조식은 몇 시부터인가요?",ja:"朝食は何時からですか？",yomi:"초쇼쿠와 난지카라데스카"},
+  {ko:"와이파이 비밀번호 알려주세요",ja:"Wi-Fiのパスワードを教えてください。",yomi:"와이화이노 파스와도오 오시에테 쿠다사이"},
+  {ko:"택시 불러 주세요",ja:"タクシーを呼んでください。",yomi:"타쿠시오 욘데 쿠다사이"},
+  {ko:"도착이 늦어집니다",ja:"到着が遅くなります。",yomi:"토차쿠가 오소쿠 나리마스"},
+  {ko:"체크아웃 부탁합니다",ja:"チェックアウトお願いします。",yomi:"첵쿠아우토 오네가이시마스"}],
+ "일정·변경":[
+  {ko:"오늘 영업하나요?",ja:"今日は営業していますか？",yomi:"쿄와 에이교시테이마스카"},
+  {ko:"몇 시까지 하나요?",ja:"何時までですか？",yomi:"난지마데데스카"},
+  {ko:"몇 시에 여나요?",ja:"何時に開きますか？",yomi:"난지니 아키마스카"},
+  {ko:"오늘 쉬는 날인가요?",ja:"今日は定休日ですか？",yomi:"쿄와 테이큐비데스카"},
+  {ko:"다음 버스는 언제인가요?",ja:"次のバスはいつですか？",yomi:"츠기노 바스와 이츠데스카"},
+  {ko:"다음 전철은 몇 시인가요?",ja:"次の電車は何時ですか？",yomi:"츠기노 덴샤와 난지데스카"},
+  {ko:"막차는 몇 시인가요?",ja:"終電は何時ですか？",yomi:"슈덴와 난지데스카"},
+  {ko:"예약을 변경하고 싶어요",ja:"予約を変更したいです。",yomi:"요야쿠오 헨코시타이데스"},
+  {ko:"예약을 취소하고 싶어요",ja:"予約をキャンセルしたいです。",yomi:"요야쿠오 캰세루시타이데스"},
+  {ko:"조금 늦을 것 같아요",ja:"少し遅れそうです。",yomi:"스코시 오쿠레소데스"},
+  {ko:"시간이 얼마나 걸리나요?",ja:"どのくらい時間がかかりますか？",yomi:"도노쿠라이 지칸가 카카리마스카"}],
+ "시간·약속":[
+  {ko:"지금 몇 시예요?",ja:"今何時ですか？",yomi:"이마 난지데스카"},
+  {ko:"잠시만요",ja:"ちょっと待ってください。",yomi:"춋토 맛테 쿠다사이"},
+  {ko:"10분 정도예요",ja:"10分ぐらいです。",yomi:"줍푼 구라이데스"},
+  {ko:"천천히 가도 돼요",ja:"ゆっくりで大丈夫です。",yomi:"윳쿠리데 다이조부데스"},
+  {ko:"여기서 만나요",ja:"ここで会いましょう。",yomi:"코코데 아이마쇼"}],
+ "곤란할 때":[
+  {ko:"길을 잃었어요",ja:"道に迷いました。",yomi:"미치니 마요이마시타"},
+  {ko:"한국어 되는 분 있나요?",ja:"韓国語ができる人はいますか？",yomi:"캉코쿠고가 데키루 히토와 이마스카"},
+  {ko:"도와주세요",ja:"助けてください。",yomi:"타스케테 쿠다사이"},
+  {ko:"화장실이 급해요",ja:"トイレに行きたいです。",yomi:"토이레니 이키타이데스"},
+  {ko:"아이와 떨어졌어요",ja:"子どもとはぐれました。",yomi:"코도모토 하구레마시타"}],
 };
 
 const EMG=[
@@ -368,7 +458,7 @@ const CATS=["식비","쇼핑","교통","숙박","기타"];
 /* ===== 상태 ===== */
 const S={tab:"sched",day:"d1",cat:"공통",guide:"sit",
   room:localStorage.getItem("fk_room")||"",me:localStorage.getItem("fk_me")||"",
-  rate:9.3, checks:{}, notes:[], shop:[], exp:[], jumpDay:null};
+  rate:9.3, checks:{}, notes:[], shop:[], exp:[], events:{}, jumpDay:null};
 let unsub=[];
 
 /* ===== 유틸 ===== */
@@ -378,7 +468,16 @@ const esc=s=>(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&g
 const fmt=n=>Math.round(n).toLocaleString();
 function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("on"),1800);}
 function nowJST(){const n=new Date();return new Date(n.getTime()+(n.getTimezoneOffset()+540)*60000);}
-function openBig(ja,yomi,ko){$("bigJa").textContent=ja;$("bigYomi").textContent=yomi||"";$("bigKo").textContent=ko||"";$("big").classList.add("on");}
+function openBig(ja,yomi,ko){$("bigJa").textContent=ja;$("bigYomi").textContent=yomi||"";$("bigKo").textContent=ko||"";$("big").classList.add("on");requestAnimationFrame(fitBig);}
+function fitBig(){
+  const wrap=$("big"), el=$("bigJa"); if(!wrap.classList.contains("on"))return;
+  const availH=Math.max(140, window.innerHeight-160), availW=window.innerWidth-32;
+  el.style.maxWidth=availW+"px";
+  let size=Math.min(46, Math.floor(window.innerWidth/8)); el.style.fontSize=size+"px";
+  let guard=0;
+  while((el.scrollHeight>availH || el.scrollWidth>availW) && size>15 && guard<90){ size--; el.style.fontSize=size+"px"; guard++; }
+}
+addEventListener("resize",()=>{ if($("big").classList.contains("on"))fitBig(); });
 function mapSearch(q){window.open("https://www.google.com/maps/search/?api=1&query="+enc(q),"_blank");}
 function mapDir(o,d){window.open("https://www.google.com/maps/dir/?api=1&origin="+enc(o)+"&destination="+enc(d)+"&travelmode=transit","_blank");}
 
@@ -388,7 +487,8 @@ function paths(){const r=S.room;return{
   checks:collection(db,"trips",r,"checks"),
   notes:collection(db,"trips",r,"notes"),
   shop:collection(db,"trips",r,"shopping"),
-  exp:collection(db,"trips",r,"expenses")};}
+  exp:collection(db,"trips",r,"expenses"),
+  events:collection(db,"trips",r,"events")};}
 async function createRoom(){
   const code=Math.random().toString(36).slice(2,7).toUpperCase();
   S.room=code;
@@ -404,6 +504,7 @@ function subscribe(){
   unsub.push(onSnapshot(p.notes,s=>{ S.notes=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0)); if(S.tab==="note")render(); },()=>{}));
   unsub.push(onSnapshot(p.shop,s=>{ S.shop=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.ts||0)-(b.ts||0)); if(S.tab==="ledger")render(); },()=>{}));
   unsub.push(onSnapshot(p.exp,s=>{ S.exp=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.ts||0)-(a.ts||0)); if(S.tab==="ledger")render(); },()=>{}));
+  unsub.push(onSnapshot(p.events,s=>{ S.events={}; s.forEach(d=>S.events[d.id]=d.data()); if(S.tab==="sched")render(); },()=>{}));
 }
 const setCheck=(id,done)=>setDoc(doc(paths().checks,id),{done,author:S.me,ts:Date.now()},{merge:true});
 const addNote=(day,text)=>addDoc(paths().notes,{day,text,author:S.me,ts:Date.now()});
@@ -414,15 +515,28 @@ const delShop=id=>deleteDoc(doc(paths().shop,id));
 const addExp=o=>addDoc(paths().exp,{...o,author:S.me,ts:Date.now()});
 const delExp=id=>deleteDoc(doc(paths().exp,id));
 const setRate=r=>setDoc(paths().meta,{rate:r},{merge:true});
+const setEvent=(id,o)=>setDoc(doc(paths().events,id),{...o,author:S.me,ts:Date.now()},{merge:true});
+const delEvent=id=>deleteDoc(doc(paths().events,id));
 
 /* ===== 렌더 ===== */
 const view=$("view"), daybar=$("daybar");
-function nowIndex(d){
+function dayEvents(d){
+  const base=d.events.map((e,i)=>{
+    const id=d.key+"_"+i, ov=S.events[id];
+    if(ov&&ov.hidden)return null;
+    return ov?{...e,id,t:ov.t||e.t,ttl:ov.ttl||e.ttl,dt:(ov.dt!=null?ov.dt:e.dt)}:{...e,id};
+  }).filter(Boolean);
+  const custom=Object.keys(S.events)
+    .filter(id=>S.events[id].custom&&S.events[id].day===d.key&&!S.events[id].hidden)
+    .map(id=>{const v=S.events[id];return {id,t:v.t||"",ttl:v.ttl||"",dt:v.dt||"",custom:true};});
+  return base.concat(custom).sort((a,b)=>(a.t||"~").localeCompare(b.t||"~"));
+}
+function curNowId(d){
   const j=nowJST(), iso=j.getFullYear()+"-"+String(j.getMonth()+1).padStart(2,"0")+"-"+String(j.getDate()).padStart(2,"0");
-  if(iso!==d.iso)return -1;
-  const mins=j.getHours()*60+j.getMinutes(); let idx=-1;
-  d.events.forEach((e,i)=>{const[h,m]=e.t.split(":").map(Number);if(h*60+m<=mins)idx=i;});
-  return idx;
+  if(iso!==d.iso)return null;
+  const mins=j.getHours()*60+j.getMinutes(); let cur=null;
+  dayEvents(d).forEach(e=>{const p=(e.t||"").split(":");if(p.length===2){const m=(+p[0])*60+(+p[1]);if(m<=mins)cur=e.id;}});
+  return cur;
 }
 function renderDaybar(){
   if(S.tab!=="sched"){daybar.style.display="none";return;}
@@ -430,23 +544,25 @@ function renderDaybar(){
   daybar.innerHTML=DAYS.map(d=>`<button class="pill ${S.day===d.key?'on':''}" data-day="${d.key}">${d.label}<span class="d">${d.date}</span></button>`).join("");
 }
 function renderSched(){
-  const d=DAYS.find(x=>x.key===S.day), ni=nowIndex(d);
+  const d=DAYS.find(x=>x.key===S.day); const list=dayEvents(d); const nowId=curNowId(d);
   let h=`<div class="lead">${esc(d.title)} · ${esc(d.lead)}</div>`;
-  h+=`<div class="daynote"><span>📒 이 날 계획이 바뀌었나요?</span><button data-jump="${d.key}">수첩에 적기 ✎</button></div>`;
-  d.events.forEach((e,i)=>{
-    const id=d.key+"_"+i, c=S.checks[id]||{}, done=!!c.done, now=i===ni;
+  h+=`<div class="daynote"><span>📒 자세한 메모는 수첩에</span><button data-jump="${d.key}">수첩 열기 ✎</button></div>`;
+  list.forEach(e=>{
+    const id=e.id, c=S.checks[id]||{}, done=!!c.done, now=id===nowId;
     let chips="";
     if(e.q) chips+=`<button class="chip map" data-map="${esc(e.q)}">📍 지도</button>`;
     if(e.dir) chips+=`<button class="chip map" data-o="${esc(e.dir[0])}" data-d="${esc(e.dir[1])}">🧭 길찾기</button>`;
     if(e.say!=null){const q=QUICK[e.say]; chips+=`<button class="chip say" data-ja="${esc(q.ja)}" data-yomi="${esc(q.yomi)}" data-ko="${esc(q.ko)}">🗣 일본어</button>`;}
     h+=`<div class="ev ${done?'done':''} ${now?'now':''}">
-      <div class="t" data-check="${id}">${e.t}${now?'<span class="nowtag">지금</span>':''}</div>
-      <div><div class="ttl" data-check="${id}">${esc(e.ttl)}</div>${e.dt?`<div class="dt">${esc(e.dt)}</div>`:''}
+      <div class="t" data-check="${id}">${esc(e.t||'—')}${now?'<span class="nowtag">지금</span>':''}</div>
+      <div><div class="ttl" data-check="${id}">${esc(e.ttl)}${e.custom?' <span style="font-size:10px;color:var(--ai);font-weight:800">추가</span>':''}</div>${e.dt?`<div class="dt">${esc(e.dt)}</div>`:''}
         ${done&&c.author?`<div class="ckby">✓ ${esc(c.author)}</div>`:''}
         ${chips?`<div class="chips">${chips}</div>`:''}</div>
-      <button class="ck" data-check="${id}">✓</button></div>`;
+      <div class="ckcol"><button class="ck" data-check="${id}">✓</button><button class="eedit" data-edit="${id}">✎</button></div></div>`;
   });
-  if(ni<0)h+=`<div class="lead" style="margin-top:14px">· 여행 당일엔 현재 시각이 <b style="color:var(--shu)">지금</b>으로 표시됩니다.</div>`;
+  h+=`<button class="addev" data-addev="${d.key}">＋ 이 날 일정 추가</button>`;
+  const hidden=d.events.map((e,i)=>d.key+"_"+i).filter(id=>S.events[id]&&S.events[id].hidden);
+  if(hidden.length)h+=`<div class="ehidden">숨긴 일정 ${hidden.length}개 · <button data-unhide="${d.key}">모두 복원</button></div>`;
   view.innerHTML=h;
 }
 function renderGuide(){
@@ -591,6 +707,9 @@ document.addEventListener("click",e=>{
   const cat=t.closest("[data-cat]"); if(cat){S.cat=cat.dataset.cat;render();return;}
   const nt=t.closest("[data-notetab]"); if(nt){S.jumpDay=nt.dataset.notetab;render();return;}
   const sit=t.closest("[data-toggle]"); if(sit){sit.closest(".card").classList.toggle("open");return;}
+  const ed=t.closest("[data-edit]"); if(ed){openEdit(ed.dataset.edit,null);return;}
+  const av=t.closest("[data-addev]"); if(av){openEdit(null,av.dataset.addev);return;}
+  const uh=t.closest("[data-unhide]"); if(uh){unhideDay(uh.dataset.unhide);return;}
   const ck=t.closest("[data-check]"); if(ck){const id=ck.dataset.check;setCheck(id,!(S.checks[id]||{}).done);return;}
   const mapb=t.closest("[data-map]"); if(mapb){mapSearch(mapb.dataset.map);return;}
   const dirb=t.closest("[data-o]"); if(dirb){mapDir(dirb.dataset.o,dirb.dataset.d);return;}
@@ -621,6 +740,46 @@ function openEmg(){
   $("emgSheet").innerHTML=h;$("emgModal").classList.add("on");
 }
 $("emgModal").addEventListener("click",e=>{ if(e.target.id==="emgModal"||e.target.closest("[data-close]"))$("emgModal").classList.remove("on"); });
+
+/* ===== 일정 편집 모달 ===== */
+let EDIT=null;
+function eventCurrent(id){
+  for(const d of DAYS){
+    for(let i=0;i<d.events.length;i++){
+      if(d.key+"_"+i===id){ const b=d.events[i], ov=S.events[id]||{};
+        return {t:ov.t||b.t, ttl:ov.ttl||b.ttl, dt:(ov.dt!=null?ov.dt:b.dt)||"", day:d.key, isBase:true}; }
+    }
+  }
+  const v=S.events[id]||{}; return {t:v.t||"", ttl:v.ttl||"", dt:v.dt||"", day:v.day||S.day, isBase:false};
+}
+function openEdit(id,addDay){
+  let cur = addDay ? {t:"",ttl:"",dt:"",day:addDay,isBase:false} : eventCurrent(id);
+  EDIT={id, day:cur.day, isBase:cur.isBase, isNew:!!addDay};
+  let h=`<button class="x" data-eclose="1">×</button><h3>${addDay?'＋ 일정 추가':'일정 수정'}</h3><p>저장하면 가족 모두에게 실시간으로 반영돼요.</p>`;
+  h+=`<div class="efield"><label>시간</label><input id="ev_t" type="time" value="${esc(cur.t)}"></div>`;
+  h+=`<div class="efield"><label>내용</label><input id="ev_ttl" value="${esc(cur.ttl)}" placeholder="예: 캐널시티 저녁"></div>`;
+  h+=`<div class="efield"><label>메모 (선택)</label><textarea id="ev_dt" placeholder="장소·주의사항 등">${esc(cur.dt)}</textarea></div>`;
+  h+=`<div class="erowbtn"><button class="save" id="ev_save">저장</button>${addDay?'':'<button class="del" id="ev_del">삭제</button>'}</div>`;
+  $("editSheet").innerHTML=h; $("editModal").classList.add("on");
+  $("ev_save").addEventListener("click",saveEdit);
+  const dbtn=$("ev_del"); if(dbtn)dbtn.addEventListener("click",deleteEditEvent);
+  setTimeout(()=>{const f=$("ev_ttl");if(f&&!f.value)f.focus();},80);
+}
+function saveEdit(){
+  const t=$("ev_t").value||"", ttl=$("ev_ttl").value.trim(), dt=$("ev_dt").value.trim();
+  if(!ttl){toast("내용을 입력하세요");return;}
+  if(EDIT.isNew){ setEvent(EDIT.day+"_c"+Date.now(),{custom:true,day:EDIT.day,t,ttl,dt}); }
+  else if(EDIT.isBase){ setEvent(EDIT.id,{t,ttl,dt}); }
+  else { setEvent(EDIT.id,{custom:true,day:EDIT.day,t,ttl,dt}); }
+  $("editModal").classList.remove("on"); toast("저장됐어요");
+}
+function deleteEditEvent(){
+  if(!confirm("이 일정을 삭제할까요?"))return;
+  if(EDIT.isBase) setEvent(EDIT.id,{hidden:true}); else delEvent(EDIT.id);
+  $("editModal").classList.remove("on"); toast("삭제됐어요");
+}
+function unhideDay(day){ const d=DAYS.find(x=>x.key===day); d.events.forEach((e,i)=>{const id=day+"_"+i; if(S.events[id]&&S.events[id].hidden)setEvent(id,{hidden:false});}); toast("복원했어요"); }
+$("editModal").addEventListener("click",e=>{ if(e.target.id==="editModal"||e.target.closest("[data-eclose]"))$("editModal").classList.remove("on"); });
 
 /* ===== 방 코드 모달 ===== */
 function showRoom(){
