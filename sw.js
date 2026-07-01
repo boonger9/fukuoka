@@ -1,7 +1,7 @@
 /* 후쿠오카 길잡이 · 서비스워커 — 오프라인 캐시
    앱셸은 캐시-우선, Firebase SDK(gstatic)는 런타임 캐시,
    Firestore 데이터 통신(googleapis)은 가로채지 않고 SDK의 오프라인 캐시에 맡김. */
-const CACHE = "fukuoka-v7";
+const CACHE = "fukuoka-v8";
 const SHELL = [
   "./",
   "./index.html",
