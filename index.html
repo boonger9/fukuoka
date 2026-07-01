@@ -34,6 +34,7 @@
   .h-right{display:flex;align-items:center;gap:10px}
   .h-clock{font-variant-numeric:tabular-nums;font-size:14px;font-weight:600;opacity:.92}
   .sos{border:0;background:var(--shu);color:#fff;border-radius:9px;width:34px;height:34px;font-size:17px;font-weight:800}
+  .fsbtn{border:1px solid rgba(255,255,255,.35);background:rgba(255,255,255,.12);color:#fff;border-radius:9px;width:34px;height:34px;font-size:16px;font-weight:900}
   .h-sub{font-size:12px;opacity:.74;margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .dot{width:7px;height:7px;border-radius:50%;background:#4ED07A;display:inline-block}
   .dot.off{background:#E8A33D}
@@ -57,11 +58,12 @@
     border-bottom:1px solid var(--line);align-items:start}
   .ev .t{font-size:13px;font-weight:800;color:var(--ai);font-variant-numeric:tabular-nums;padding-top:1px}
   .ev .ttl{font-size:15.5px;font-weight:700;letter-spacing:-.01em}
-  .ev .dt{font-size:13px;color:var(--muted);margin-top:2px}
+  .ev .dt{font-size:13px;color:var(--muted);margin-top:2px;white-space:pre-wrap;word-break:break-word}
   .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
   .chip{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:7px;padding:5px 9px;border:1px solid transparent}
   .chip.map{color:var(--ai);background:var(--ai-tint)}
   .chip.say{color:var(--shu);background:var(--shu-tint)}
+  .chip.link{color:#6b3fa0;background:#f0e9fa}
   .ck{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);background:transparent;
     display:flex;align-items:center;justify-content:center;color:transparent;font-size:13px;font-weight:900;margin-top:1px}
   .ev.done .ttl,.ev.done .dt{color:var(--done);text-decoration:line-through;text-decoration-color:#cfd4dc}
@@ -196,7 +198,7 @@
 
   nav{position:fixed;bottom:0;left:0;right:0;z-index:25;background:rgba(251,247,239,.95);
     backdrop-filter:saturate(1.2) blur(8px);border-top:1px solid var(--line);
-    display:grid;grid-template-columns:repeat(6,1fr);padding-bottom:env(safe-area-inset-bottom)}
+    display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom)}
   nav button{border:0;background:transparent;padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-size:10.5px;font-weight:700}
   nav button .ni{font-size:20px;line-height:1}
   nav button.on{color:var(--ink)}
@@ -257,7 +259,7 @@
 <header>
   <div class="h-row">
     <div class="h-title">후쿠오카 <b>길잡이</b></div>
-    <div class="h-right"><span class="h-clock" id="clock">--:--</span>
+    <div class="h-right"><button class="fsbtn" data-fs="1" aria-label="글씨 크기">가</button><span class="h-clock" id="clock">--:--</span>
       <button class="sos" data-modal="emg" aria-label="긴급">🆘</button></div>
   </div>
   <div class="h-sub"><span><span class="dot" id="netdot"></span> <span id="netlbl">온라인</span></span>
@@ -511,6 +513,7 @@ const CATS=["식비","쇼핑","교통","숙박","기타"];
 
 /* ===== 상태 ===== */
 const S={tab:"sched",day:"d1",cat:"공통",guide:"sit",
+  fs:(localStorage.getItem("fk_fs")!=null?+localStorage.getItem("fk_fs"):2),
   room:localStorage.getItem("fk_room")||"",me:localStorage.getItem("fk_me")||"",
   rate:9.3, checks:{}, notes:[], shop:[], exp:[], events:{}, loc:{}, share:(localStorage.getItem("fk_share")==="1"), infoTab:"info", files:[], jumpDay:null};
 let unsub=[];
@@ -606,11 +609,11 @@ function dayEvents(d){
   const base=d.events.map((e,i)=>{
     const id=d.key+"_"+i, ov=S.events[id];
     if(ov&&ov.hidden)return null;
-    return ov?{...e,id,t:ov.t||e.t,ttl:ov.ttl||e.ttl,dt:(ov.dt!=null?ov.dt:e.dt)}:{...e,id};
+    return ov?{...e,id,t:ov.t||e.t,ttl:ov.ttl||e.ttl,dt:(ov.dt!=null?ov.dt:e.dt),links:(ov.links||e.links||[])}:{...e,id,links:e.links||[]};
   }).filter(Boolean);
   const custom=Object.keys(S.events)
     .filter(id=>S.events[id].custom&&S.events[id].day===d.key&&!S.events[id].hidden)
-    .map(id=>{const v=S.events[id];return {id,t:v.t||"",ttl:v.ttl||"",dt:v.dt||"",custom:true};});
+    .map(id=>{const v=S.events[id];return {id,t:v.t||"",ttl:v.ttl||"",dt:v.dt||"",links:v.links||[],custom:true};});
   return base.concat(custom).sort((a,b)=>(a.t||"~").localeCompare(b.t||"~"));
 }
 function curNowId(d){
@@ -638,7 +641,6 @@ function renderSched(){
   h+=`<div class="prog"><div class="pbar"><span style="width:${tot?Math.round(doneN/tot*100):0}%"></span></div>
     <div class="pnum">완료 ${doneN}/${tot} · 가족 모두 확인 ${seenAllN}/${tot}</div></div>`;
   if(nextEv)h+=`<div class="nextbar">▸ 다음 <b>${esc(nextEv.t||'')} ${esc(nextEv.ttl)}</b></div>`;
-  h+=`<div class="daynote"><span>📒 자세한 메모는 수첩에</span><button data-jump="${d.key}">수첩 열기 ✎</button></div>`;
 
   list.forEach(e=>{
     const id=e.id, c=S.checks[id]||{}, done=!!c.done, now=id===nowId, seen=c.seen||{};
@@ -646,6 +648,7 @@ function renderSched(){
     if(e.q) chips+=`<button class="chip map" data-map="${esc(e.q)}">📍 지도</button>`;
     if(e.dir) chips+=`<button class="chip map" data-o="${esc(e.dir[0])}" data-d="${esc(e.dir[1])}">🧭 길찾기</button>`;
     if(e.say!=null){const q=QUICK[e.say]; chips+=`<button class="chip say" data-ja="${esc(q.ja)}" data-yomi="${esc(q.yomi)}" data-ko="${esc(q.ko)}">🗣 일본어</button>`;}
+    (e.links||[]).forEach(l=>{ chips+=`<button class="chip link" data-openurl="${esc(l.url)}">🔗 ${esc(l.label)}</button>`; });
     const seenchips=ROLES.map(r=>{const on=!!seen[r.key],mine=r.key===S.me;return `<button class="seen ${on?'on':''} ${mine?'mine':''}" data-seen="${id}" data-member="${r.key}">${r.emoji}${r.label}${on?'<span class="mk">✓</span>':''}</button>`;}).join("");
     h+=`<div class="ev ${done?'done':''} ${now?'now':''}">
       <div class="t" data-edit="${id}">${esc(e.t||'—')}${now?'<span class="nowtag">지금</span>':''}</div>
@@ -891,8 +894,8 @@ function drawFamMap(){
   try{ if(pts.length===1)LMAP.setView(pts[0],16); else if(pts.length>1)LMAP.fitBounds(pts,{padding:[40,40],maxZoom:16}); }catch(e){}
 }
 function centerMe(){ const d=S.loc[S.me]; if(LMAP&&window.L&&d&&d.lat!=null){LMAP.setView([d.lat,d.lng],16);} else toast("내 위치 공유를 먼저 켜세요"); }
-const RENDER={sched:renderSched,loc:renderLoc,guide:renderGuide,ledger:renderLedger,note:renderNote,info:renderInfo};
-const NAV=[["sched","📅","일정"],["loc","📍","위치"],["guide","🧭","가이드"],["ledger","💴","가계부"],["note","📒","수첩"],["info","📄","정보"]];
+const RENDER={sched:renderSched,loc:renderLoc,guide:renderGuide,ledger:renderLedger,info:renderInfo};
+const NAV=[["sched","📅","일정"],["loc","📍","위치"],["guide","🧭","가이드"],["ledger","💴","가계부"],["info","📄","정보"]];
 function renderNav(){$("nav").innerHTML=NAV.map(([k,i,l])=>`<button class="${S.tab===k?'on':''}" data-tab="${k}"><span class="ni">${i}</span>${l}</button>`).join("");}
 function render(){renderDaybar();renderNav();RENDER[S.tab]();}
 
@@ -920,12 +923,12 @@ async function shareRoom(){
 document.addEventListener("click",e=>{
   if(e.target.closest("#big")){$("big").classList.remove("on");return;}
   const t=e.target;
+  const fsb=t.closest("[data-fs]"); if(fsb){cycleFs();return;}
   const tab=t.closest("[data-tab]"); if(tab){S.tab=tab.dataset.tab;render();window.scrollTo(0,0);return;}
   const day=t.closest("[data-day]"); if(day){S.day=day.dataset.day;render();return;}
-  const jump=t.closest("[data-jump]"); if(jump){S.tab="note";S.jumpDay=jump.dataset.jump;render();window.scrollTo(0,0);return;}
   const g=t.closest("[data-guide]"); if(g){S.guide=g.dataset.guide;render();return;}
   const cat=t.closest("[data-cat]"); if(cat){S.cat=cat.dataset.cat;render();return;}
-  const nt=t.closest("[data-notetab]"); if(nt){S.jumpDay=nt.dataset.notetab;render();return;}
+
   const sit=t.closest("[data-toggle]"); if(sit){sit.closest(".card").classList.toggle("open");return;}
   const ed=t.closest("[data-edit]"); if(ed){openEdit(ed.dataset.edit,null);return;}
   const av=t.closest("[data-addev]"); if(av){openEdit(null,av.dataset.addev);return;}
@@ -975,22 +978,33 @@ $("emgModal").addEventListener("click",e=>{ if(e.target.id==="emgModal"||e.targe
 
 /* ===== 일정 편집 모달 ===== */
 let EDIT=null;
+function parseLinks(text){
+  return (text||"").split(/\n+/).map(s=>s.trim()).filter(Boolean).map(line=>{
+    let label="", url=line; const bar=line.indexOf("|");
+    if(bar>=0){ label=line.slice(0,bar).trim(); url=line.slice(bar+1).trim(); }
+    if(!/^https?:\/\//i.test(url)) url="https://"+url.replace(/^\/+/,"");
+    if(!label){ try{label=new URL(url).hostname.replace(/^www\./,"");}catch(e){label="링크";} }
+    return {label,url};
+  }).slice(0,8);
+}
+function linksToText(links){ return (links||[]).map(l=>l.label?(l.label+" | "+l.url):l.url).join("\n"); }
 function eventCurrent(id){
   for(const d of DAYS){
     for(let i=0;i<d.events.length;i++){
       if(d.key+"_"+i===id){ const b=d.events[i], ov=S.events[id]||{};
-        return {t:ov.t||b.t, ttl:ov.ttl||b.ttl, dt:(ov.dt!=null?ov.dt:b.dt)||"", day:d.key, isBase:true}; }
+        return {t:ov.t||b.t, ttl:ov.ttl||b.ttl, dt:(ov.dt!=null?ov.dt:b.dt)||"", links:(ov.links||b.links||[]), day:d.key, isBase:true}; }
     }
   }
-  const v=S.events[id]||{}; return {t:v.t||"", ttl:v.ttl||"", dt:v.dt||"", day:v.day||S.day, isBase:false};
+  const v=S.events[id]||{}; return {t:v.t||"", ttl:v.ttl||"", dt:v.dt||"", links:v.links||[], day:v.day||S.day, isBase:false};
 }
 function openEdit(id,addDay){
-  let cur = addDay ? {t:"",ttl:"",dt:"",day:addDay,isBase:false} : eventCurrent(id);
+  let cur = addDay ? {t:"",ttl:"",dt:"",links:[],day:addDay,isBase:false} : eventCurrent(id);
   EDIT={id, day:cur.day, isBase:cur.isBase, isNew:!!addDay};
-  let h=`<button class="x" data-eclose="1">×</button><h3>${addDay?'＋ 일정 추가':'일정 수정'}</h3><p>저장하면 가족 모두에게 실시간으로 반영돼요.</p>`;
-  h+=`<div class="efield"><label>시간</label><input id="ev_t" type="time" value="${esc(cur.t)}"></div>`;
-  h+=`<div class="efield"><label>내용</label><input id="ev_ttl" value="${esc(cur.ttl)}" placeholder="예: 캐널시티 저녁"></div>`;
-  h+=`<div class="efield"><label>메모 (선택)</label><textarea id="ev_dt" placeholder="장소·주의사항 등">${esc(cur.dt)}</textarea></div>`;
+  let h=`<button class="x" data-eclose="1">×</button><h3>${addDay?'＋ 일정 추가':'일정 수정'}</h3><p>제목·세부내용·링크를 넣을 수 있어요. 저장하면 가족 모두에게 실시간 반영돼요.</p>`;
+  h+=`<div class="efield"><label>시간 (24시간·분 단위)</label><input id="ev_t" type="time" value="${esc(cur.t)}"></div>`;
+  h+=`<div class="efield"><label>제목</label><input id="ev_ttl" value="${esc(cur.ttl)}" placeholder="예: 캐널시티 저녁"></div>`;
+  h+=`<div class="efield"><label>세부 내용 (여러 줄 가능)</label><textarea id="ev_dt" rows="4" placeholder="지침·주의사항·준비물 등 자세히">${esc(cur.dt)}</textarea></div>`;
+  h+=`<div class="efield"><label>링크 (유튜브·블로그 · 한 줄에 하나)</label><textarea id="ev_links" rows="3" placeholder="예)&#10;맛집 영상 | https://youtu.be/xxxx&#10;https://blog.naver.com/xxxx">${esc(linksToText(cur.links))}</textarea></div>`;
   h+=`<div class="erowbtn"><button class="save" id="ev_save">저장</button>${addDay?'':'<button class="del" id="ev_del">삭제</button>'}</div>`;
   $("editSheet").innerHTML=h; $("editModal").classList.add("on");
   $("ev_save").addEventListener("click",saveEdit);
@@ -998,11 +1012,11 @@ function openEdit(id,addDay){
   setTimeout(()=>{const f=$("ev_ttl");if(f&&!f.value)f.focus();},80);
 }
 function saveEdit(){
-  const t=$("ev_t").value||"", ttl=$("ev_ttl").value.trim(), dt=$("ev_dt").value.trim();
-  if(!ttl){toast("내용을 입력하세요");return;}
-  if(EDIT.isNew){ setEvent(EDIT.day+"_c"+Date.now(),{custom:true,day:EDIT.day,t,ttl,dt}); }
-  else if(EDIT.isBase){ setEvent(EDIT.id,{t,ttl,dt}); }
-  else { setEvent(EDIT.id,{custom:true,day:EDIT.day,t,ttl,dt}); }
+  const t=$("ev_t").value||"", ttl=$("ev_ttl").value.trim(), dt=$("ev_dt").value.trim(), links=parseLinks($("ev_links").value);
+  if(!ttl){toast("제목을 입력하세요");return;}
+  if(EDIT.isNew){ setEvent(EDIT.day+"_c"+Date.now(),{custom:true,day:EDIT.day,t,ttl,dt,links}); }
+  else if(EDIT.isBase){ setEvent(EDIT.id,{t,ttl,dt,links}); }
+  else { setEvent(EDIT.id,{custom:true,day:EDIT.day,t,ttl,dt,links}); }
   $("editModal").classList.remove("on"); toast("저장됐어요");
 }
 function deleteEditEvent(){
@@ -1045,6 +1059,11 @@ function ddayText(j){
 }
 function tick(){const j=nowJST();$("clock").textContent=String(j.getHours()).padStart(2,"0")+":"+String(j.getMinutes()).padStart(2,"0");$("ddaylbl").textContent=ddayText(j);}
 tick();setInterval(tick,20000);
+/* ===== 글씨 크기(4단계, 각자 폰) ===== */
+const FS=[0.9,1.0,1.15,1.32], FSL=["작게","보통","크게","아주 크게"];
+function applyFs(){ try{ view.style.zoom=FS[S.fs]; daybar.style.zoom=FS[S.fs]; }catch(e){} }
+function cycleFs(){ S.fs=(S.fs+1)%FS.length; localStorage.setItem("fk_fs",S.fs); applyFs(); toast("글씨 "+FSL[S.fs]); }
+applyFs();
 
 /* ===== 시작 ===== */
 if(S.room&&S.me){ $("roomlbl").textContent=S.room; subscribe(); render(); resumeShare(); }
